@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "pipelined_simulator.cc"
+
 #define pp pair<ll,ll>
 #define ll long long int
 #define tr(a,x) for(auto a:x)
@@ -29,8 +30,10 @@ int main(int arc,char *argv[])
 	string fil(argv[1]);
 	prog prog1(fil);
 	prog1.print();
-	pipelined_simulator sim;
-	sim.simulate(prog1);
+	pipelined_simulator sim1;
+	sim1.simulate(prog1);
+	singlecycle_simulator sim2;
+	sim2.simulate(prog1);
 	return 0;
 }
 
