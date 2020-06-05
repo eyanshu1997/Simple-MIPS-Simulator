@@ -20,6 +20,107 @@
 #define N 10
 #define M 15
 using namespace std;
+class singlecycle_simulator
+{
+	public:
+	int registers[32];
+	int data[512];
+	void execute(instructions inst,prog &p)
+	{
+		if(inst.type=='R')
+		{
+			if(inst.rs>31||inst.rt>31||inst.dest>31)
+			{
+				assert(!"Invalid register location");
+			}
+			if(inst.op=="add")
+					registers[inst.dest]=registers[inst.rs]+registers[inst.rt];
+			else if(inst.op=="sub")
+					registers[inst.dest]=registers[inst.rs]-registers[inst.rt];
+			else if(inst.op=="mul")
+					registers[inst.dest]=registers[inst.rs]*registers[inst.rt];
+			else
+			{
+				inst.print();
+				assert(!" wrong opcode r type");
+			}
+		}
+		else
+		{
+			if(inst.rs>31)
+			{	
+				assert(!"Invalid register location");
+			}
+			if(inst.op== "addi")
+				registers[inst.dest]=registers[inst.rs]+inst.i;
+			else if(inst.op=="lw")
+			{
+				int y;
+				if(inst.i % 4 == 0)
+				{
+					y = registers[inst.rs] + inst.i/4;
+				}
+				else
+				{
+					assert(!"Misaligned memory access");
+				}
+				if(&data[y] == NULL)
+				{
+					assert(!"Read from invalid data memory location");
+				}
+				registers[inst.rt] = data[y];
+			}
+			else if(inst.op=="sw")
+			{
+				int y;
+				if(inst.i % 4 == 0)
+				{
+					y = registers[inst.rs] + inst.i/4;
+				}
+				else
+				{
+					assert(!"Misaligned memory access");
+				}
+				if(&data[y] == NULL)
+				{
+					assert(!"Read from invalid data memory location");
+				}
+				data[y]=registers[inst.rt];
+			}
+			else if(inst.op=="beq")
+			{
+				if(registers[inst.rs] == registers[inst.rt])
+				{
+					p.pc= p.pc + inst.i;
+					if(p.pc >sz(p.instlist)-1)
+					{
+						assert(!"Branched out of program");
+					}
+				}
+			}
+			else
+			{
+				inst.print();
+				assert(!"wrong opcode");
+			}
+		}
+	}
+	void simulate(prog p)
+	{
+		using namespace std::chrono; 
+		auto start = high_resolution_clock::now();
+		fo(i,sz(p.instlist)-1)
+		{
+			instructions tmp=p.instlist[i];
+			execute(tmp,p);
+		}
+		auto stop = high_resolution_clock::now(); 
+		auto duration = duration_cast<microseconds>(stop - start); 
+		cout<<"total cycles is"<<sz(p.instlist)-1<<"\n";
+		cout<<"time taken is "<<duration.count()<<" microseconds\n";
+	}
+};
+
 class pipelined_simulator
 {
 	public:
@@ -322,24 +423,63 @@ class pipelined_simulator
 			l4.valid = false; 
 		}
 	}
-	void simulate(prog p)
+	void simulate(prog p,bool print,bool regout)
 	{
 		int totalcycles=0;
-		using namespace std::chrono; 
-		auto start = high_resolution_clock::now();
+		ofstream co;
+		co.open("steps.txt");
 		while(!p.totally_done)
 		{
-			wb(p);
-			mem(p);
-			execute(p);
-			decode(p);
-			fetch(p);	
+			if(regout)
+			{
+				co<<"NEXT Instructions in \n";
+				co<<"Fetch state\n";
+				co<<p.instlist[p.pc].print();
+				if(l1.warmed_up&&l1.valid)
+				{
+					co<<"Decode state\n";
+					co<<l1.inst.print();
+				}
+				if(l2.warmed_up&&l2.valid)
+				{
+					co<<"Execute state\n";
+					co<<l2.inst.print();
+				}
+				if(l3.warmed_up&&l3.valid)
+				{					
+					co<<"Memory state\n";
+					co<<l3.inst.print();
+				}
+				if(l4.warmed_up&&l4.valid)
+				{
+					co<<"WriteBack state\n";
+					co<<l4.inst.print();
+				}
+				co<<"\nRegisters\n";				
+				int i;
+				for(i = 0; i < 32; i++)
+				{
+					co<<"Register $"<<i<<": "<<registers[i]<<"\n";
+				}
+				co<<"\n----------------------------------\n";				
+				wb(p);
+				mem(p);
+				execute(p);
+				decode(p);
+				fetch(p);
+			}	
 			//cout<<"cycle done\n";
 			totalcycles++;
 		}
-		auto stop = high_resolution_clock::now(); 
-		auto duration = duration_cast<microseconds>(stop - start); 
+		co.close();
 		cout<<"total cycles is"<<totalcycles<<"\n";
-		cout<<"time taken is "<<duration.count()<<" microseconds\n";
+		if(print)
+		{
+			cout<<"Instruction Fetch Utilization"<<1.0*p.ifutil/totalcycles*100<<"\n";
+			cout<<"Instruction Decode Utilization"<<1.0*p.idutil/totalcycles*100<<"\n";
+			cout<<"Execute Utilization"<<1.0*p.exutil/totalcycles*100<<"\n";
+			cout<<"Memory Utilization"<<1.0*p.memutil/totalcycles*100<<"\n";
+			cout<<"Write Back Utilization"<<1.0*p.wbutil/totalcycles*100<<"\n";
+		}
 	}
 };

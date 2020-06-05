@@ -1,5 +1,5 @@
 #include <bits/stdc++.h>
-#include "pipelined_simulator.cc"
+#include "simulatorclass.cc"
 
 #define pp pair<ll,ll>
 #define ll long long int
@@ -20,20 +20,46 @@
 
 using namespace std;
 
+inline bool exists(string& name) {
+    ifstream f(name.c_str());
+    return f.good();
+}
 int main(int arc,char *argv[])
 {
-	if(arc<2)
+	cout<<"enter the file name for program\n";
+	string fil;
+	cin>>fil;
+	if(!exists(fil))
 	{
-		printf("enter the file name as arg ");
-		return 0;
+		cout<<"file doesnt exist\n";
+		exit(0);
 	}
-	string fil(argv[1]);
-	prog prog1(fil);
-	prog1.print();
-	pipelined_simulator sim1;
-	sim1.simulate(prog1);
-	singlecycle_simulator sim2;
-	sim2.simulate(prog1);
+	prog p(fil);
+	//prog1.print();
+	cout<<"Do you want single cycle simulator(0) or multicycle/pipelined (1)?\n";
+	int ch;
+	cin>>ch;
+	if(ch==0)
+	{
+		singlecycle_simulator sim;
+		sim.simulate(p);
+	}
+	else
+	{
+		bool a,b;
+		pipelined_simulator sim;
+		cout<<"do you want to print each step status to a file[steps.txt]?(y/n)\n";
+		char x;
+		cin>>x;
+		if(x=='n')
+			sim.simulate(p,true,false);
+		else
+			sim.simulate(p,true,true);
+	}
+	//pipelined_simulator sim1;
+	//sim1.simulate(prog1,true,true);
+	//singlecycle_simulator sim2;
+	//sim2.simulate(prog1);
 	return 0;
 }
 

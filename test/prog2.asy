@@ -30,4 +30,3 @@ mul $s0, $s0, $s1
 mul $s0, $s0, $s1
 mul $s0, $s0, $s1
 mul $s0, $s0, $s1
-

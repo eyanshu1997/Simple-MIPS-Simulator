@@ -78,9 +78,9 @@ class instructions
 			assert(!"Illegal opcode");
 		}
 	}
-	void print()
+	string print()
 	{
-		cout<<op<<" $"<<rs<<", $"<<rt<<" $"<<dest<<" "<<i<<"\n";
+		return op+" $"+to_string(rs)+", $"+to_string(rt)+" $"+to_string(dest)+" "+to_string(i)+"\n";
 	}
 };
 instructions bubble('B',"bubble",0,0,0,0);
