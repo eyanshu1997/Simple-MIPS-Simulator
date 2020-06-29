@@ -36,7 +36,7 @@ int main(int arc,char *argv[])
 	}
 	prog p(fil);
 	//prog1.print();
-	cout<<"Do you want single cycle simulator(0) or multicycle/pipelined (1)?\n";
+	cout<<"Do you want single cycle simulator(0) or MIPS multicycle/pipelined (1) or R4000 MIPS Pipelined(2)?\n";
 	int ch;
 	cin>>ch;
 	if(ch==0)
@@ -46,15 +46,29 @@ int main(int arc,char *argv[])
 	}
 	else
 	{
-		bool a,b;
-		pipelined_simulator sim;
-		cout<<"do you want to print each step status to a file[steps.txt]?(y/n)\n";
-		char x;
-		cin>>x;
-		if(x=='n')
-			sim.simulate(p,true,false);
+		if(ch==1)
+		{
+			pipelined_simulator sim;
+			cout<<"do you want to print each step status to a file[steps.txt]?(y/n)\n";
+			char x;
+			cin>>x;
+			if(x=='n')
+				sim.simulate(p,true,false);
+			else
+				sim.simulate(p,true,true);
+		}
 		else
-			sim.simulate(p,true,true);
+		{
+			r4000_pipelined_simulator sim;
+			cout<<p.print();
+			cout<<"do you want to print each step status to a file[steps.txt]?(y/n)\n";
+			char x;
+			cin>>x;
+			if(x=='n')
+				sim.simulate(p,true,false);
+			else
+				sim.simulate(p,true,true);
+		}
 	}
 	//pipelined_simulator sim1;
 	//sim1.simulate(prog1,true,true);

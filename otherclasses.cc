@@ -134,11 +134,13 @@ class prog
 		instructions tmp('B',"haltsimulation",-1,-1,-1,-1);
 		instlist.push_back(tmp);
 	}
-	void print()
+	string print()
 	{
+		string s="";
 		tr(a,instlist)
 		{
-			a.print();
+			s=s+a.print();
 		}
+		return s;
 	}
 };

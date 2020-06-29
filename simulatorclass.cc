@@ -483,3 +483,537 @@ class pipelined_simulator
 		}
 	}
 };
+class latch1 
+{
+	public:
+		latch1()
+		{
+			warmed_up=false;
+		}
+	int instructioncount,tmp;
+	
+	bool valid;
+	int data;
+	bool warmed_up;
+	instructions inst;
+};
+class r4000_pipelined_simulator
+{
+	public:
+	latch1 l1,l2,l3,l4,l5,l6,l7;
+	int registers[32];
+	int data[512];
+	int rawHazard()
+	{
+		instructions inst = l2.inst;
+		if(l2.inst.type != 'B')
+		{
+			if(l3.warmed_up && inst.rs == l3.inst.dest && l3.inst.op != "sw")
+			{
+				if(inst.rs != 0)
+				{
+					return inst.rs;
+				}
+			}
+
+			if(l4.warmed_up && inst.rs == l4.inst.dest && l4.inst.op != "sw")
+			{
+				if(inst.rs != 0)
+				{
+					return inst.rs;
+				}
+			}
+
+			if(l7.warmed_up && inst.rs == l7.inst.dest && l7.inst.op != "sw")
+			{
+				if(inst.rs != 0)
+				{
+					return inst.rs;
+				}
+			}
+
+
+			if(inst.type == 'R' || inst.op == "beq")
+			{
+				if(l3.warmed_up && inst.rt == l3.inst.dest && l3.inst.op != "sw")
+				{
+					if(inst.rt != 0)
+					{
+						return inst.rt;
+					}
+				}
+
+				if(l4.warmed_up && inst.rt == l4.inst.dest && l4.inst.op != "sw")
+				{
+					if(inst.rt != 0)
+					{
+						return inst.rt;
+					}
+				}
+
+				if(l7.warmed_up && inst.rt == l7.inst.dest && l7.inst.op != "sw")
+				{
+					if(inst.rt != 0)
+					{
+						return inst.rt;
+					}
+				}
+			}
+		}
+		return -1;
+	}
+	void ifs(prog &p)
+	{
+		//cout<<"hi1\n";
+		if(!p.branchpending)
+		{
+			if(!l1.valid)
+			{
+				//int add=p.pc;
+				//instructoon cache 100 % there fore no miss
+				if(p.pc<sz(p.instlist))
+				{
+					l1.instructioncount=p.pc;
+					//cout<<"incremented pc\n";
+					p.pc=p.pc+1;
+					l1.valid=true;
+					if(!l1.warmed_up)
+						l1.warmed_up=true;
+
+				}
+			}
+		}
+	}
+	void is(prog &p)
+	{
+		//cout<<"hi2\n";
+		if(!p.branchpending)
+		{
+			if(l1.valid &&l1.warmed_up&& !l2.valid)
+			{
+				//cout<<"executed fetch\n";
+				//cout<<"pc is "<<p.pc<<"\n";
+				l1.valid=false;
+				l2.valid=true;
+				l2.inst=p.instlist[l1.instructioncount];
+				//l1.inst.print();
+				//p.ifutil++;
+				if(!l2.warmed_up)
+				{
+					l2.warmed_up=true;
+				}
+			}
+		}
+
+	}
+	void rf(prog &p)
+	{
+		//cout<<"hi3\n";
+		if(l2.valid && l2.warmed_up && !l3.valid)
+		{
+			//cout<<"executed decode\n";
+			//l1.inst.print();
+			if(rawHazard() == -1)//change this function
+			{
+				if(l2.inst.op == "beq")
+				{
+					p.branchpending = true;
+				}
+				l2.valid = false;
+				l3.valid = true;
+				l3.inst = l2.inst;
+				//if(l3.inst.type != 'B')
+				//{
+				//	p.idutil++;
+				//}
+				if(!l3.warmed_up)
+				{
+					l3.warmed_up = true;
+				}
+			}
+			else
+			{
+				l3.valid = true;
+				l3.inst = bubble;
+			}
+		}
+	}
+	void execute(prog &p)
+	{
+				//cout<<"hi4\n";
+		if(l3.warmed_up && l3.valid)
+		{
+			//cout<<"executed execute\n";
+			//l3.inst.print();
+			if(l3.inst.type == 'B')
+			{
+				if(!l4.valid)
+				{
+					l3.valid = false;
+					l4.valid = true;
+					l4.inst = l3.inst;
+				}
+			}
+			else
+			{
+				if(!l4.valid )
+				{
+					if(l3.inst.rs > 31 || l3.inst.rt > 31)
+					{
+						assert(!"Invalid register location");
+					}
+					if(l3.inst.op == "add")
+					{
+						l4.data = registers[l3.inst.rs] + registers[l3.inst.rt];
+					}
+					else if(l3.inst.op == "addi")
+					{
+						l4.data = registers[l3.inst.rs] + l3.inst.i;
+					}
+					else if(l3.inst.op == "sub")
+					{
+						l4.data = registers[l3.inst.rs] - registers[l3.inst.rt];
+					}
+					else if(l3.inst.op == "mul")
+					{
+						l4.data = registers[l3.inst.rs] * registers[l3.inst.rt];
+					}
+					else if(l3.inst.op  == "beq")
+					{
+						if(registers[l3.inst.rs] == registers[l3.inst.rt])
+						{
+							p.pc= p.pc + l3.inst.i;
+							if(p.pc >sz(p.instlist)-1)
+							{
+								assert(!"Branched out of program");
+							}
+						}
+						p.branchpending = false;
+					}
+					else if(l3.inst.op == "lw" || l3.inst.op == "sw")
+					{
+						if(l3.inst.i % 4 == 0)
+						{
+							l4.data = registers[l3.inst.rt];
+							l4.inst.dest = registers[l3.inst.rs] + l3.inst.i/4;
+						}
+						else
+						{
+							assert(!"Misaligned memory access");
+						}
+					}
+					else 
+					{
+						cout<<"instruction is\n";
+						l3.inst.print();
+						cout<<" opcode is "<<l3.inst.op<<"\n";
+						assert(!"Unrecognized instruction");
+					}
+					//e_cycles = 0;
+					l3.valid = false;
+					l4.valid = true;
+					l4.inst = l3.inst;
+					if(!l4.warmed_up)
+					{
+						l4.warmed_up = true;
+					}
+					//cout<<"set true\n";
+					
+				}
+				//p.exutil++;
+			}	
+		}
+	}
+	void df(prog &p)
+	{
+		//cout<<"hi5\n";
+		if(l4.warmed_up && l4.valid)
+		{
+			//cout<<"executed mem\n";
+			//l6.inst.print();
+			if(l4.inst.type == 'B')
+			{
+				if(!l5.valid)
+				{
+					l4.valid = false;
+					l5.valid = true;
+					l5.inst = l4.inst;
+				}
+			}
+			else
+			{
+				//static int m_cycles = 0;
+				bool is_lw = l4.inst.op == "lw";
+				if(is_lw)
+				{
+					if(!l5.valid)
+					{
+						//m_cycles = 0;
+						l4.valid = false;
+						l5.valid = true; 
+						l5.inst = l4.inst;
+						if(!l5.warmed_up)
+						{
+							l5.warmed_up = true;
+						}
+						if(is_lw)
+						{
+							if(&data[l4.data] == NULL)
+							{
+								assert(!"Read from invalid data memory location");
+							}
+							l5.tmp = l4.inst.dest;
+						}
+					}
+				}
+				else
+				{
+					l4.valid = false;
+					l5.valid = true; 
+					l5.inst = l4.inst;
+					l5.data = l4.data;
+					if(!l5.warmed_up)
+					{
+					l5.warmed_up = true;
+					}
+					l5.tmp= l4.tmp;
+				}
+				//if(l6.inst.type != 'B')
+				//{
+				//	p.memutil++;
+				//}
+			}
+		}
+	
+	}
+	void ds(prog &p)
+	{
+		//cout<<"hi6\n";
+		if(l5.warmed_up && l5.valid)
+		{
+			//cout<<"executed mem\n";
+			//l6.inst.print();
+			if(l5.inst.type == 'B')
+			{
+				if(!l6.valid)
+				{
+					l5.valid = false;
+					l6.valid = true;
+					l6.inst = l5.inst;
+				}
+			}
+			else
+			{
+				//static int m_cycles = 0;
+				bool is_lw = l5.inst.op == "lw";
+				if(is_lw)
+				{
+					if(!l6.valid)
+					{
+						//m_cycles = 0;
+						l5.valid = false;
+						l6.valid = true; 
+						l6.inst = l5.inst;
+						if(!l6.warmed_up)
+						{
+							l6.warmed_up = true;
+						}
+						if(is_lw)
+						{
+							if(&data[l5.data] == NULL)
+							{
+								assert(!"Read from invalid data memory location");
+							}
+							l6.tmp = data[l5.tmp];
+						}
+					}
+				}
+				else
+				{
+					l5.valid = false;
+					l6.valid = true; 
+					l6.inst = l5.inst;
+					l5.tmp= l4.tmp;
+					l6.data = l5.data;
+					if(!l6.warmed_up)
+					{
+					l6.warmed_up = true;
+					}
+				}
+				//if(l6.inst.type != 'B')
+				//{
+				//	p.memutil++;
+				//}
+			}
+		}
+	}
+	void tc(prog &p)
+	{
+		//cout<<"hi7\n";
+		int x=rand()%100;
+		if(x!=1)//condition for cache miss
+		{
+			if(l6.warmed_up && l6.valid)
+			{
+				//cout<<"executed mem\n";
+				//l6.inst.print();
+				if(l6.inst.type == 'B')
+				{
+					if(!l7.valid)
+					{
+						l6.valid = false;
+						l7.valid = true;
+						l7.inst = l6.inst;
+					}
+				}
+				else
+				{
+					bool is_lw = l6.inst.op == "lw";
+					bool is_sw = l6.inst.op == "sw";
+					if(is_lw || is_sw)
+					{
+						if(!l7.valid)
+						{
+							//m_cycles = 0;
+							l6.valid = false;
+							l7.valid = true; 
+							l7.inst = l6.inst;
+							if(!l7.warmed_up)
+							{
+								l7.warmed_up = true;
+							}
+							if(is_lw)
+							{
+								if(&data[l6.data] == NULL)
+								{
+									assert(!"Read from invalid data memory location");
+								}
+								l7.data = l6.tmp;
+							}
+							if(is_sw)
+							{
+								if(&data[l6.data] == NULL)
+								{
+									assert(!"Attempted to write to invalid data memory location");
+								}
+								data[l6.inst.dest] = l6.data;
+							}
+						}
+					}
+					else
+					{
+						l6.valid = false;
+						l7.valid = true; 
+						l7.inst = l6.inst;
+						l7.data = l6.data;
+						if(!l7.warmed_up)
+						{
+						l7.warmed_up = true;
+						}
+						//cout<<"set\n";
+					}
+					//if(l6.inst.type != 'B')
+					//{
+					//	p.memutil++;
+					//}
+				}
+			}
+		}
+	}  
+
+	void wb(prog &p)
+	{
+		//cout<<"hi8\n";
+		if(l7.valid && l7.warmed_up)
+		{
+			//cout<<"executed wb\n";
+			//l7.inst.print();
+			if(l7.inst.op != "sw" && l7.inst.op != "beq" && l7.inst.op != "haltsimulation" && l7.inst.dest != 0 && l7.inst.type != 'B')
+			{
+				registers[l7.inst.dest] = l7.data;
+				//p.wbutil++;
+			}   
+			if(l7.inst.type == 'B' && l7.inst.op=="haltsimulation")
+			{
+				p.totally_done = true;
+			}
+			l7.valid = false; 
+		}
+	}
+	void simulate(prog p,bool print,bool regout)
+	{
+		int totalcycles=0;
+		ofstream co;
+		co.open("steps.txt");
+		//cout<<"hi\n";
+		while(!p.totally_done)
+		{
+			if(regout)
+			{
+				co<<"NEXT Instructions in \n";
+				if(l1.warmed_up&&l1.valid)
+				{
+					co<<"First Fetch state\n";
+					co<<p.instlist[l1.instructioncount].print();
+				}
+				////cout<<"hi\n";				
+				if(l2.warmed_up&&l2.valid)
+				{
+					co<<"Register Decode state\n";
+					co<<l2.inst.print();
+				}
+				if(l3.warmed_up&&l3.valid)
+				{					
+					co<<"Execute state\n";
+					co<<l3.inst.print();
+				}
+
+				if(l4.warmed_up&&l4.valid)
+				{
+					co<<"Data Fetch first state\n";
+					co<<l4.inst.print();
+				}
+
+				if(l5.warmed_up&&l5.valid)
+				{
+					co<<"Data Fetch Second state\n";
+					co<<l5.inst.print();
+				}
+
+				if(l6.warmed_up&&l6.valid)
+				{
+					co<<"Tag Check state\n";
+					co<<l6.inst.print();
+				}
+
+				if(l7.warmed_up&&l7.valid)
+				{
+					co<<"WriteBack state\n";
+					co<<l7.inst.print();
+				}
+				co<<"\nRegisters\n";				
+				int i;
+				for(i = 0; i < 32; i++)
+				{
+					co<<"Register $"<<i<<": "<<registers[i]<<"\n";
+				}
+				co<<"\n----------------------------------\n";	
+				co.flush();			
+				////cout<<"hi\n";
+				wb(p);
+				tc(p);
+				ds(p);
+				df(p);
+				execute(p);
+				rf(p);
+				is(p);
+				ifs(p);
+			}	
+			//cout<<"cycle done\n";
+			totalcycles++;
+		}
+		cout<<"total cycles is"<<totalcycles<<"\n";
+		co.close();
+	}
+};
+
