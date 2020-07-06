@@ -109,6 +109,7 @@ class prog
 	int exutil;
 	int memutil;
 	int wbutil;
+	int hazard;
 	prog(string filename)
 	{
 		totally_done=false;
@@ -119,6 +120,7 @@ class prog
 		exutil=0;
 		memutil=0;
 		wbutil=0;
+		hazard=0;
 		string line;
 		ifstream file;
 		file.open(filename);

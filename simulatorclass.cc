@@ -116,7 +116,7 @@ class singlecycle_simulator
 		}
 		auto stop = high_resolution_clock::now(); 
 		auto duration = duration_cast<microseconds>(stop - start); 
-		cout<<"total cycles is"<<sz(p.instlist)-1<<"\n";
+		cout<<"total cycles is "<<sz(p.instlist)-1<<"\n";
 		cout<<"time taken is "<<duration.count()<<" microseconds\n";
 	}
 };
@@ -127,7 +127,7 @@ class pipelined_simulator
 	latch l1,l2,l3,l4;
 	int registers[32];
 	int data[512];
-	int rawHazard()
+	int rawHazard(prog &p)
 	{
 		instructions inst = l1.inst;
 		if(l1.inst.type != 'B')
@@ -136,6 +136,7 @@ class pipelined_simulator
 			{
 				if(inst.rs != 0)
 				{
+					p.hazard=p.hazard+1;
 					return inst.rs;
 				}
 			}
@@ -163,6 +164,7 @@ class pipelined_simulator
 				{
 					if(inst.rt != 0)
 					{
+						p.hazard=p.hazard+1;	
 						return inst.rt;
 					}
 				}
@@ -218,7 +220,7 @@ class pipelined_simulator
 		{
 			//cout<<"executed decode\n";
 			//l1.inst.print();
-			if(rawHazard() == -1)//change this function
+			if(rawHazard(p) == -1)//change this function
 			{
 				if(l1.inst.op == "beq")
 				{
@@ -265,6 +267,7 @@ class pipelined_simulator
 				{
 					if(l2.inst.rs > 31 || l2.inst.rt > 31)
 					{
+						cout<<l2.inst.print()<<"\n";
 						assert(!"Invalid register location");
 					}
 					if(l2.inst.op == "add")
@@ -462,17 +465,19 @@ class pipelined_simulator
 					co<<"Register $"<<i<<": "<<registers[i]<<"\n";
 				}
 				co<<"\n----------------------------------\n";				
-				wb(p);
-				mem(p);
-				execute(p);
-				decode(p);
-				fetch(p);
-			}	
+			}
+			wb(p);
+			mem(p);
+			execute(p);
+			decode(p);
+			fetch(p);
 			//cout<<"cycle done\n";
 			totalcycles++;
 		}
 		co.close();
-		cout<<"total cycles is"<<totalcycles<<"\n";
+		cout<<"number of hazards "<<p.hazard<<"\n";
+		cout<<"total cycles is "<<totalcycles<<"\n";
+		cout<<"total number of latches 3\n";
 		if(print)
 		{
 			cout<<"Instruction Fetch Utilization"<<1.0*p.ifutil/totalcycles*100<<"\n";
@@ -503,7 +508,7 @@ class r4000_pipelined_simulator
 	latch1 l1,l2,l3,l4,l5,l6,l7;
 	int registers[32];
 	int data[512];
-	int rawHazard()
+	int rawHazard(prog &p)
 	{
 		instructions inst = l2.inst;
 		if(l2.inst.type != 'B')
@@ -512,6 +517,7 @@ class r4000_pipelined_simulator
 			{
 				if(inst.rs != 0)
 				{
+					p.hazard=p.hazard+1;
 					return inst.rs;
 				}
 			}
@@ -520,6 +526,7 @@ class r4000_pipelined_simulator
 			{
 				if(inst.rs != 0)
 				{
+					p.hazard=p.hazard+1;
 					return inst.rs;
 				}
 			}
@@ -539,6 +546,7 @@ class r4000_pipelined_simulator
 				{
 					if(inst.rt != 0)
 					{
+						p.hazard=p.hazard+1;
 						return inst.rt;
 					}
 				}
@@ -547,6 +555,7 @@ class r4000_pipelined_simulator
 				{
 					if(inst.rt != 0)
 					{
+						p.hazard=p.hazard+1;
 						return inst.rt;
 					}
 				}
@@ -613,7 +622,7 @@ class r4000_pipelined_simulator
 		{
 			//cout<<"executed decode\n";
 			//l1.inst.print();
-			if(rawHazard() == -1)//change this function
+			if(rawHazard(p) == -1)//change this function
 			{
 				if(l2.inst.op == "beq")
 				{
@@ -850,7 +859,7 @@ class r4000_pipelined_simulator
 	void tc(prog &p)
 	{
 		//cout<<"hi7\n";
-		int x=rand()%100;
+		int x=rand()%20;
 		if(x!=1)//condition for cache miss
 		{
 			if(l6.warmed_up && l6.valid)
@@ -918,6 +927,10 @@ class r4000_pipelined_simulator
 					//}
 				}
 			}
+		}
+		else
+		{
+			p.hazard=p.hazard+1;
 		}
 	}  
 
@@ -1000,19 +1013,21 @@ class r4000_pipelined_simulator
 				co<<"\n----------------------------------\n";	
 				co.flush();			
 				////cout<<"hi\n";
-				wb(p);
-				tc(p);
-				ds(p);
-				df(p);
-				execute(p);
-				rf(p);
-				is(p);
-				ifs(p);
 			}	
+			wb(p);
+			tc(p);
+			ds(p);
+			df(p);
+			execute(p);
+			rf(p);
+			is(p);
+			ifs(p);
 			//cout<<"cycle done\n";
 			totalcycles++;
 		}
-		cout<<"total cycles is"<<totalcycles<<"\n";
+		cout<<"number of hazards "<<p.hazard<<"\n";
+		cout<<"total cycles is "<<totalcycles<<"\n";
+		cout<<"total number of latches 7\n";
 		co.close();
 	}
 };
