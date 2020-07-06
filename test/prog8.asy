@@ -1,5 +1,61 @@
-addi $s0, $zero, 10
-addi $s1, $zero, 0
-addi $s1, $s1, 10
-beq $s0, $s1, -2
-
+         addi $s0, $zero, 15
+         addi $s1, $zero, 20
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1
+         lw  $s0, $s1,    1

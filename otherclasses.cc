@@ -159,9 +159,9 @@ class prog
 		}
 		return s;
 	}
-	int cpi(bool x)
+	float cpi(bool x)
 	{
-		int sum=0;
+		float sum=0;
 		tr(a,instlist)
 		{
 			if(x)
