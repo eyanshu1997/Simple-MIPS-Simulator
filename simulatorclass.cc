@@ -195,6 +195,7 @@ class pipelined_simulator
 		{
 			if(!l1.valid)
 			{
+				p.totalcycles++;
 				//cout<<"executed fetch\n";
 				//cout<<"pc is "<<p.pc<<"\n";
 				l1.valid=true;
@@ -218,6 +219,7 @@ class pipelined_simulator
 	{
 		if(l1.valid && l1.warmed_up && !l2.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed decode\n";
 			//l1.inst.print();
 			if(rawHazard(p) == -1)//change this function
@@ -249,6 +251,7 @@ class pipelined_simulator
 	{
 		if(l2.warmed_up && l2.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed execute\n";
 			//l2.inst.print();
 			static int e_cycles = 0;
@@ -339,6 +342,7 @@ class pipelined_simulator
 	{
 		if(l3.warmed_up && l3.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed mem\n";
 			//l3.inst.print();
 			if(l3.inst.type == 'B')
@@ -412,6 +416,7 @@ class pipelined_simulator
 	{
 		if(l4.valid && l4.warmed_up)
 		{
+			p.totalcycles++;
 			//cout<<"executed wb\n";
 			//l4.inst.print();
 			if(l4.inst.op != "sw" && l4.inst.op != "beq" && l4.inst.op != "haltsimulation" && l4.inst.dest != 0 && l4.inst.type != 'B')
@@ -475,8 +480,10 @@ class pipelined_simulator
 			totalcycles++;
 		}
 		co.close();
+		cout<<"total no of instruction"<<p.count()<<"\n";
 		cout<<"number of hazards "<<p.hazard<<"\n";
-		cout<<"total cycles is "<<totalcycles<<"\n";
+		//cout<<"total cycles is "<<p.totalcycles<<"\n";
+		cout<<"CPI "<<p.cpi(false)<<"\n";
 		cout<<"total number of latches 3	\n";
 		if(print)
 		{
@@ -578,6 +585,7 @@ class r4000_pipelined_simulator
 		{
 			if(!l1.valid)
 			{
+				p.totalcycles++;
 				//int add=p.pc;
 				//instructoon cache 100 % there fore no miss
 				if(p.pc<sz(p.instlist))
@@ -600,6 +608,7 @@ class r4000_pipelined_simulator
 		{
 			if(l1.valid &&l1.warmed_up&& !l2.valid)
 			{
+				p.totalcycles++;
 				//cout<<"executed fetch\n";
 				//cout<<"pc is "<<p.pc<<"\n";
 				l1.valid=false;
@@ -620,6 +629,7 @@ class r4000_pipelined_simulator
 		//cout<<"hi3\n";
 		if(l2.valid && l2.warmed_up && !l3.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed decode\n";
 			//l1.inst.print();
 			if(rawHazard(p) == -1)//change this function
@@ -652,6 +662,7 @@ class r4000_pipelined_simulator
 				//cout<<"hi4\n";
 		if(l3.warmed_up && l3.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed execute\n";
 			//l3.inst.print();
 			if(l3.inst.type == 'B')
@@ -738,6 +749,7 @@ class r4000_pipelined_simulator
 		//cout<<"hi5\n";
 		if(l4.warmed_up && l4.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed mem\n";
 			//l6.inst.print();
 			if(l4.inst.type == 'B')
@@ -800,6 +812,7 @@ class r4000_pipelined_simulator
 		//cout<<"hi6\n";
 		if(l5.warmed_up && l5.valid)
 		{
+			p.totalcycles++;
 			//cout<<"executed mem\n";
 			//l6.inst.print();
 			if(l5.inst.type == 'B')
@@ -864,6 +877,7 @@ class r4000_pipelined_simulator
 		{
 			if(l6.warmed_up && l6.valid)
 			{
+				p.totalcycles++;
 				//cout<<"executed mem\n";
 				//l6.inst.print();
 				if(l6.inst.type == 'B')
@@ -939,6 +953,7 @@ class r4000_pipelined_simulator
 		//cout<<"hi8\n";
 		if(l7.valid && l7.warmed_up)
 		{
+			p.totalcycles++;
 			//cout<<"executed wb\n";
 			//l7.inst.print();
 			if(l7.inst.op != "sw" && l7.inst.op != "beq" && l7.inst.op != "haltsimulation" && l7.inst.dest != 0 && l7.inst.type != 'B')
@@ -1025,8 +1040,10 @@ class r4000_pipelined_simulator
 			//cout<<"cycle done\n";
 			totalcycles++;
 		}
+		cout<<"total no of instruction "<<p.count()<<"\n";
 		cout<<"number of hazards "<<p.hazard<<"\n";
-		cout<<"total cycles is "<<totalcycles<<"\n";
+		cout<<"CPI "<<p.cpi(true)<<"\n";
+		//cout<<"total cycles is "<<p.totalcycles<<"\n";
 		cout<<"total number of latches 7\n";
 		co.close();
 	}

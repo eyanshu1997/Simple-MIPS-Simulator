@@ -16,7 +16,6 @@
 #define newl cout<<"\n"
 #define opa(s) tr(a,s){op(a);newl;}
 using namespace std;
-
 bool isRType(string opcode){
   return opcode=="add" || opcode=="sub"  || opcode=="mul";
 }

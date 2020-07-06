@@ -78,6 +78,18 @@ class instructions
 			assert(!"Illegal opcode");
 		}
 	}
+	int cpi()
+	{
+		if(op=="lw")
+			return 5;
+		if(op=="sw")
+			return 4;
+		if(op=="add" || op=="sub"  || op=="mul")
+			return 4;
+		if(op=="beq")
+			return 3;
+		return 5;
+	}
 	string print()
 	{
 		return op+" $"+to_string(rs)+", $"+to_string(rt)+" $"+to_string(dest)+" "+to_string(i)+"\n";
@@ -110,6 +122,7 @@ class prog
 	int memutil;
 	int wbutil;
 	int hazard;
+	int totalcycles;
 	prog(string filename)
 	{
 		totally_done=false;
@@ -121,6 +134,7 @@ class prog
 		memutil=0;
 		wbutil=0;
 		hazard=0;
+		totalcycles=0;
 		string line;
 		ifstream file;
 		file.open(filename);
@@ -144,5 +158,22 @@ class prog
 			s=s+a.print();
 		}
 		return s;
+	}
+	int cpi(bool x)
+	{
+		int sum=0;
+		tr(a,instlist)
+		{
+			if(x)
+			sum+=(a.cpi()+3);
+			else
+			sum+=a.cpi();
+		}
+		//cout<<"sum is"<<sum<<"\n";
+		return (sum/count());
+	}
+	int count()
+	{
+		return sz(instlist);
 	}
 };
