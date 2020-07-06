@@ -477,7 +477,7 @@ class pipelined_simulator
 		co.close();
 		cout<<"number of hazards "<<p.hazard<<"\n";
 		cout<<"total cycles is "<<totalcycles<<"\n";
-		cout<<"total number of latches 3\n";
+		cout<<"total number of latches 3	\n";
 		if(print)
 		{
 			cout<<"Instruction Fetch Utilization"<<1.0*p.ifutil/totalcycles*100<<"\n";
